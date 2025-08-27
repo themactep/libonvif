@@ -2408,6 +2408,37 @@ xmlDocPtr sendCommandToCamera(char *cmd, char *xaddrs) {
     const char *debug_env = getenv("ONVIF_DEBUG");
     bool xml_debug_enabled = (debug_env && strcmp(debug_env, "1") == 0);
 
+    // Helper function to format and print XML
+    void print_formatted_xml(const char *label, const char *xml_data, const char *target_url) {
+        if (!xml_debug_enabled || !xml_data || !label) return;
+
+        printf("\n");
+        printf("================================================================================\n");
+        printf("=== ONVIF RAW XML %s to %s\n", label, target_url ? target_url : "unknown");
+        printf("================================================================================\n");
+
+        // Try to format the XML nicely
+        xmlDocPtr doc = xmlParseMemory(xml_data, strlen(xml_data));
+        if (doc) {
+            xmlChar *formatted_xml = NULL;
+            int size = 0;
+            xmlDocDumpFormatMemory(doc, &formatted_xml, &size, 1);
+            if (formatted_xml) {
+                printf("%s\n", (char *)formatted_xml);
+                xmlFree(formatted_xml);
+            } else {
+                printf("%s\n", xml_data);
+            }
+            xmlFreeDoc(doc);
+        } else {
+            // If XML parsing fails, print raw data
+            printf("%s\n", xml_data);
+        }
+
+        printf("================================================================================\n");
+        printf("\n");
+    }
+
     char tmp[128] = {0};
     char *mark = strstr(xaddrs, "//");
     int start = mark-xaddrs+2;
@@ -2470,6 +2501,25 @@ xmlDocPtr sendCommandToCamera(char *cmd, char *xaddrs) {
         xmlDocSetRootElement(doc, root_node);
         xmlNewChild(root_node, NULL, BAD_CAST "error", BAD_CAST "Network error, unable to connect");
         return doc;
+    }
+
+    // Log the raw HTTP request (including XML) if debugging is enabled
+    if (xml_debug_enabled) {
+        // Extract XML from the HTTP request
+        char *xml_start = strstr(cmd, "<?xml");
+        if (!xml_start) {
+            xml_start = strstr(cmd, "<SOAP-ENV:Envelope");
+            if (!xml_start) {
+                xml_start = strstr(cmd, "<Envelope");
+            }
+        }
+        if (xml_start) {
+            print_formatted_xml("REQUEST", xml_start, xaddrs);
+        } else {
+            printf("\n=== ONVIF RAW HTTP REQUEST to %s ===\n", xaddrs);
+            printf("%s\n", cmd);
+            printf("=== END HTTP REQUEST ===\n\n");
+        }
     }
 
     if (send(sock , cmd , strlen(cmd) , 0 ) < 0) {
@@ -2548,6 +2598,11 @@ xmlDocPtr sendCommandToCamera(char *cmd, char *xaddrs) {
         cumulative_read = cumulative_read + valread;
     }
     xml_reply[xml_length] = '\0';
+
+    // Log the raw XML response if debugging is enabled
+    if (xml_debug_enabled) {
+        print_formatted_xml("RESPONSE", xml_reply, xaddrs);
+    }
 
 #ifdef _WIN32
     closesocket(sock);
