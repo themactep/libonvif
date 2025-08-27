@@ -2404,6 +2404,10 @@ xmlDocPtr sendCommandToCamera(char *cmd, char *xaddrs) {
     struct sockaddr_in serv_addr;
     char buffer[4096] = {0};
 
+    // Check if XML debugging is enabled
+    const char *debug_env = getenv("ONVIF_DEBUG");
+    bool xml_debug_enabled = (debug_env && strcmp(debug_env, "1") == 0);
+
     char tmp[128] = {0};
     char *mark = strstr(xaddrs, "//");
     int start = mark-xaddrs+2;
