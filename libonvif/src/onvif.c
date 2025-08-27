@@ -2410,6 +2410,18 @@ xmlDocPtr sendCommandToCamera(char *cmd, char *xaddrs) {
 
     if (xml_debug_enabled) {
         printf("DEBUG: sendCommandToCamera called with xaddrs: %s\n", xaddrs ? xaddrs : "NULL");
+
+        // Extract and display raw XML from HTTP request
+        char *xml_start = strstr(cmd, "<?xml");
+        if (xml_start) {
+            printf("\n");
+            printf("================================================================================\n");
+            printf("=== RAW ONVIF SOAP XML REQUEST ===\n");
+            printf("================================================================================\n");
+            printf("%s\n", xml_start);
+            printf("================================================================================\n");
+            printf("\n");
+        }
         fflush(stdout);
     }
 
@@ -2745,6 +2757,13 @@ void getBase64(unsigned char * buffer, int chunk_size, unsigned char * result) {
 }
 
 void addHttpHeader(xmlDocPtr doc, xmlNodePtr root, char *xaddrs, char *post_type, char cmd[], int cmd_length __attribute__((unused))) {
+    // Debug: Check if this function is being called
+    const char *debug_env = getenv("ONVIF_DEBUG");
+    if (debug_env && strcmp(debug_env, "1") == 0) {
+        printf("DEBUG: addHttpHeader called for %s\n", xaddrs ? xaddrs : "NULL");
+        fflush(stdout);
+    }
+
     xmlOutputBufferPtr outputbuffer = xmlAllocOutputBuffer(NULL);
     xmlNodeDumpOutput(outputbuffer, doc, root, 0, 0, NULL);
     int size = xmlOutputBufferGetSize(outputbuffer);
@@ -2757,6 +2776,17 @@ void addHttpHeader(xmlDocPtr doc, xmlNodePtr root, char *xaddrs, char *post_type
         strcpy(xml, (char*)xmlOutputBufferGetContent(outputbuffer));
     }
 
+    // Debug raw XML if enabled
+    if (debug_env && strcmp(debug_env, "1") == 0) {
+        printf("\n");
+        printf("================================================================================\n");
+        printf("=== RAW ONVIF SOAP XML REQUEST ===\n");
+        printf("================================================================================\n");
+        printf("%s\n", xml);
+        printf("================================================================================\n");
+        printf("\n");
+        fflush(stdout);
+    }
 
     xmlOutputBufferFlush(outputbuffer);
     xmlOutputBufferClose(outputbuffer);
