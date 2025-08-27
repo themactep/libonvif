@@ -2408,6 +2408,11 @@ xmlDocPtr sendCommandToCamera(char *cmd, char *xaddrs) {
     const char *debug_env = getenv("ONVIF_DEBUG");
     bool xml_debug_enabled = (debug_env && strcmp(debug_env, "1") == 0);
 
+    if (xml_debug_enabled) {
+        printf("DEBUG: sendCommandToCamera called with xaddrs: %s\n", xaddrs ? xaddrs : "NULL");
+        fflush(stdout);
+    }
+
     // Helper function to format and print XML
     void print_formatted_xml(const char *label, const char *xml_data, const char *target_url) {
         if (!xml_debug_enabled || !xml_data || !label) return;
@@ -2437,6 +2442,7 @@ xmlDocPtr sendCommandToCamera(char *cmd, char *xaddrs) {
 
         printf("================================================================================\n");
         printf("\n");
+        fflush(stdout);
     }
 
     char tmp[128] = {0};
