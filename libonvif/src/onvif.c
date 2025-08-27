@@ -514,7 +514,7 @@ int setHostname(struct OnvifData *onvif_data) {
     xmlDocSetRootElement(doc, root);
     xmlNsPtr ns_env = xmlNewNs(root, BAD_CAST "http://www.w3.org/2003/05/soap-envelope", BAD_CAST "SOAP-ENV");
     xmlNsPtr ns_tds = xmlNewNs(root, BAD_CAST "http://www.onvif.org/ver10/device/wsdl", BAD_CAST "tds");
-    xmlNsPtr ns_tt = xmlNewNs(root, BAD_CAST "http://www.onvif.org/ver10/schema", BAD_CAST "tt");
+    xmlNsPtr ns_tt __attribute__((unused)) = xmlNewNs(root, BAD_CAST "http://www.onvif.org/ver10/schema", BAD_CAST "tt");
     xmlSetNs(root, ns_env);
     addUsernameDigestHeader(root, ns_env, onvif_data->username, onvif_data->password, onvif_data->time_offset);
     xmlNodePtr body = xmlNewTextChild(root, ns_env, BAD_CAST "Body", NULL);
@@ -839,7 +839,7 @@ int setVideoEncoderConfiguration(struct OnvifData *onvif_data) {
     sprintf(height_buf, "%d", onvif_data->height);
 
     sprintf(quality_buf, "%f", onvif_data->quality);
-    for (int i = 0; i < strlen(quality_buf); i++) {
+    for (int i = 0; i < (int)strlen(quality_buf); i++) {
         if (quality_buf[i] == ',')
             quality_buf[i] = '.';
     }
@@ -936,13 +936,13 @@ int getAudioEncoderConfigurationOptions(struct OnvifData *onvif_data) {
         xmlChar *xpath = BAD_CAST "//s:Body//trt:GetAudioEncoderConfigurationOptionsResponse//trt:Options//tt:Encoding";
         xmlNodeSetPtr nodeset;
         xmlXPathObjectPtr xml_result = getNodeSet(reply, xpath);
-        int k = 0;
+        int k __attribute__((unused)) = 0;
         if (xml_result) {
             nodeset = xml_result->nodesetval;
             for (int i=0; i<nodeset->nodeNr; i++) {
                 xmlNodePtr cur = nodeset->nodeTab[i]->children;
                 while(cur != NULL) {
-                    strcpy(onvif_data->audio_encoders[i], cur->content);
+                    strcpy(onvif_data->audio_encoders[i], (char*)cur->content);
                     cur = cur->next;
                 }
             }
@@ -962,7 +962,7 @@ int getAudioEncoderConfigurationOptions(struct OnvifData *onvif_data) {
                 while(cur != NULL) {
                     item = xmlNodeListGetString(reply, cur->xmlChildrenNode, 1);
                     if (item) {
-                        onvif_data->audio_bitrates[i][j] = atoi(item);
+                        onvif_data->audio_bitrates[i][j] = atoi((char*)item);
                         j++;
                     }
                     cur = cur->next;
@@ -982,7 +982,7 @@ int getAudioEncoderConfigurationOptions(struct OnvifData *onvif_data) {
                 while(cur != NULL) {
                     item = xmlNodeListGetString(reply, cur->xmlChildrenNode, 1);
                     if (item) {
-                        onvif_data->audio_sample_rates[i][j] = atoi(item);
+                        onvif_data->audio_sample_rates[i][j] = atoi((char*)item);
                         j++;
                     }
                     cur = cur->next;
@@ -1161,7 +1161,7 @@ int getProfile(struct OnvifData *onvif_data) {
     addHttpHeader(doc, root, onvif_data->xaddrs, onvif_data->media_service, cmd, 4096);
     xmlDocPtr reply = sendCommandToCamera(cmd, onvif_data->xaddrs);
     if (reply != NULL) {
-        char temp_buf[128];
+        char temp_buf[128] __attribute__((unused));
 
         xmlChar *xpath;
 
@@ -1338,7 +1338,7 @@ int getStatus(struct OnvifData *onvif_data) {
     xmlDocSetRootElement(doc, root);
     xmlNsPtr ns_env = xmlNewNs(root, BAD_CAST "http://www.w3.org/2003/05/soap-envelope", BAD_CAST "SOAP-ENV");
     xmlNsPtr ns_ptz = xmlNewNs(root, BAD_CAST "http://www.onvif.org/ver20/ptz/wsdl", BAD_CAST "tptz");
-    xmlNsPtr ns_tt  = xmlNewNs(root, BAD_CAST "http://www.onvif.org/ver10/schema", BAD_CAST "tt");
+    xmlNsPtr ns_tt __attribute__((unused)) = xmlNewNs(root, BAD_CAST "http://www.onvif.org/ver10/schema", BAD_CAST "tt");
     xmlSetNs(root, ns_env);
     addUsernameDigestHeader(root, ns_env, onvif_data->username, onvif_data->password, onvif_data->time_offset);
     xmlNodePtr body = xmlNewTextChild(root, ns_env, BAD_CAST "Body", NULL);
@@ -2068,7 +2068,7 @@ int getDeviceInformation(struct OnvifData *onvif_data) {
     return result;
 }
 
-void getDiscoveryXml2(char buffer[], int buf_size) {
+void getDiscoveryXml2(char buffer[], int buf_size __attribute__((unused))) {
     char *xml_string = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\"><s:Header><a:Action s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</a:Action><a:MessageID>uuid:6bbdae2d-f229-42c8-a27b-93880fb80826</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><a:To s:mustUnderstand=\"1\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</a:To></s:Header><s:Body><Probe xmlns=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"><d:Types xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" xmlns:dp0=\"http://www.onvif.org/ver10/device/wsdl\">dp0:Device</d:Types></Probe></s:Body></s:Envelope>";
     strcpy(buffer, xml_string);
 }
@@ -2088,9 +2088,9 @@ void getDiscoveryXml(char buffer[], int buf_size, char uuid[47]) {
     xmlNodePtr header = xmlNewTextChild(root, ns_env, BAD_CAST "Header", NULL);
     xmlNodePtr action = xmlNewTextChild(header, ns_a, BAD_CAST "Action", BAD_CAST "http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe");
     xmlNewProp(action, BAD_CAST "SOAP-ENV:mustUnderstand", BAD_CAST "1");
-    xmlNodePtr messageid = xmlNewTextChild(header, ns_a, BAD_CAST "MessageID", BAD_CAST uuid);
+    xmlNodePtr messageid __attribute__((unused)) = xmlNewTextChild(header, ns_a, BAD_CAST "MessageID", BAD_CAST uuid);
     xmlNodePtr replyto = xmlNewTextChild(header, ns_a, BAD_CAST "ReplyTo", NULL);
-    xmlNodePtr address = xmlNewTextChild(replyto, ns_a, BAD_CAST "Address", BAD_CAST "http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous");
+    xmlNodePtr address __attribute__((unused)) = xmlNewTextChild(replyto, ns_a, BAD_CAST "Address", BAD_CAST "http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous");
     xmlNodePtr to = xmlNewTextChild(header, ns_a, BAD_CAST "To", BAD_CAST "urn:schemas-xmlsoap-org:ws:2005:04:discovery");
     xmlNewProp(to, BAD_CAST "SOAP-ENV:mustUnderstand", BAD_CAST "1");
     xmlNodePtr body = xmlNewTextChild(root, ns_env, BAD_CAST "Body", NULL);
@@ -2105,7 +2105,7 @@ void getDiscoveryXml(char buffer[], int buf_size, char uuid[47]) {
     xmlSetNs(types, ns_d);
     xmlOutputBufferPtr outputbuffer = xmlAllocOutputBuffer(NULL);
     xmlNodeDumpOutput(outputbuffer, doc, root, 0, 0, NULL);
-    int size = xmlOutputBufferGetSize(outputbuffer);
+    int size __attribute__((unused)) = xmlOutputBufferGetSize(outputbuffer);
     strcpy(buffer, (char*)xmlOutputBufferGetContent(outputbuffer));
     xmlOutputBufferFlush(outputbuffer);
     xmlOutputBufferClose(outputbuffer);
@@ -2352,7 +2352,7 @@ int getNodeAttributen (xmlDocPtr doc, xmlChar *xpath, xmlChar *attribute, char b
 
         keyword = xmlGetProp(result->nodesetval->nodeTab[profileIndex], attribute);
         if (keyword != NULL) {
-            if (strlen((char*) keyword) > buf_length-1) {
+            if (strlen((char*) keyword) > (size_t)(buf_length-1)) {
                 xmlXPathFreeObject(result);
                 xmlFree(keyword);
                 return -4;
@@ -2399,7 +2399,7 @@ xmlXPathObjectPtr getNodeSet (xmlDocPtr doc, xmlChar *xpath) {
 }
 
 xmlDocPtr sendCommandToCamera(char *cmd, char *xaddrs) {
-    int sock = 0, valread, flags;
+    int sock = 0, valread, flags __attribute__((unused));
     const int buffer_size = 4096;
     struct sockaddr_in serv_addr;
     char buffer[4096] = {0};
@@ -2618,7 +2618,7 @@ xmlDocPtr sendCommandToCamera(char *cmd, char *xaddrs) {
 #endif
 
     xmlDocPtr reply = xmlParseMemory(xml_reply, xml_length);
-    char error_msg[1024] = {0};
+    char error_msg[1024] __attribute__((unused)) = {0};
 
     if (dump_reply) {
         dumpReply(reply);
@@ -2664,7 +2664,7 @@ void addUsernameDigestHeader(xmlNodePtr root, xmlNsPtr ns_env, char *user, char 
     char time_holder[1024] = {0};
     char digest_base64[1024] = {0};
 
-    for (int i=0; i<nonce_chunk_size; i++) {
+    for (int i=0; i<(int)nonce_chunk_size; i++) {
         nonce_buffer[i] = (unsigned char)rand();
     }
 
@@ -2744,7 +2744,7 @@ void getBase64(unsigned char * buffer, int chunk_size, unsigned char * result) {
     *c = 0;
 }
 
-void addHttpHeader(xmlDocPtr doc, xmlNodePtr root, char *xaddrs, char *post_type, char cmd[], int cmd_length) {
+void addHttpHeader(xmlDocPtr doc, xmlNodePtr root, char *xaddrs, char *post_type, char cmd[], int cmd_length __attribute__((unused))) {
     xmlOutputBufferPtr outputbuffer = xmlAllocOutputBuffer(NULL);
     xmlNodeDumpOutput(outputbuffer, doc, root, 0, 0, NULL);
     int size = xmlOutputBufferGetSize(outputbuffer);
@@ -2803,7 +2803,7 @@ void addHttpHeader(xmlDocPtr doc, xmlNodePtr root, char *xaddrs, char *post_type
         }
         port_buf[j-(start+1)] = '\0';
     }
-    int port = atoi(port_buf);
+    int port __attribute__((unused)) = atoi(port_buf);
 
     char content[] =
     "User-Agent: Generic\r\n"
@@ -2871,7 +2871,7 @@ int broadcast(struct OnvifSession *onvif_session) {
     int broadcast_socket;
     char broadcast_message[1024] = {0};
     unsigned int address_size;
-    int error_code;
+    int error_code __attribute__((unused));
 
     if (onvif_session->discovery_msg_id == 1)
         getDiscoveryXml(broadcast_message, 1024, onvif_session->uuid);
@@ -3175,7 +3175,7 @@ int setSocketOptions(int socket) {
     struct timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = 500000;
-    int broadcast = 500;
+    int broadcast __attribute__((unused)) = 500;
     char loopch = 0;
     int status = 0;
     struct in_addr localInterface;
@@ -3334,23 +3334,23 @@ void extractHost(char *xaddrs, char host[128]) {
     char tmp[128] = {0};
     char *mark = NULL;
     
-    if (mark = strstr(xaddrs, "//")) {
+    if ((mark = strstr(xaddrs, "//"))) {
         int start = mark-xaddrs+2;
-        for (int j=0; j < strlen(xaddrs)-start; j++) {
+        for (int j=0; j < (int)(strlen(xaddrs)-start); j++) {
             if (j < 128)
                 tmp[j] = xaddrs[j+start];
         }
     }
 
-    if (mark = strstr(tmp, "/")) {
+    if ((mark = strstr(tmp, "/"))) {
         int end = mark-tmp;
-        for (int j = end; j < strlen(tmp); j++)
+        for (int j = end; j < (int)strlen(tmp); j++)
             tmp[j] = '\0';
     }
 
-    if (mark = strstr(tmp, ":")) {
-        int start = mark-tmp;
-        for (int j=mark-tmp; j<strlen(tmp); j++) {
+    if ((mark = strstr(tmp, ":"))) {
+        int start __attribute__((unused)) = mark-tmp;
+        for (int j=mark-tmp; j<(int)strlen(tmp); j++) {
             tmp[j] = '\0';
         }
     }
@@ -3364,7 +3364,7 @@ void getScopeField(char *scope, char *field_name, char cleaned[1024]) {
     char field_contents[1024] = {0};
     char *mark;
     int length;
-    char *result = NULL;
+    char *result __attribute__((unused)) = NULL;
 
     field = strstr(scope, field_name);
     if (field != NULL) {
@@ -3438,6 +3438,7 @@ bool extractXAddrs(int ordinal, struct OnvifSession *onvif_session, struct Onvif
             int mark = sub - onvif_data->xaddrs;
             char test[16] = {0};
             strncpy(test, onvif_data->xaddrs, 15);
+            test[15] = '\0';  /* Ensure null termination */
             if (strcmp(test, "http://169.254.")) {
                 onvif_data->xaddrs[mark] = '\0';
             }
@@ -3700,7 +3701,7 @@ void initializeSession(struct OnvifSession *onvif_session) {
     strcpy(preferred_network_address, onvif_session->preferred_network_address);
 }
 
-void closeSession(struct OnvifSession *onvif_session) {
+void closeSession(struct OnvifSession *onvif_session __attribute__((unused))) {
 #ifdef _WIN32
     WSACleanup();
 #endif
@@ -3743,7 +3744,7 @@ void dumpXmlNode (xmlDocPtr doc, xmlNodePtr cur_node, char *prefix) {
     const char *name;
     const char *value;
     char new_prefix[1024];
-    char attr[128];
+    char attr[128] __attribute__((unused));
     xmlAttrPtr prop;
 
     /* Traverse the tree */
@@ -3787,7 +3788,7 @@ void dumpReply(xmlDocPtr reply) {
 
 /* Dump all available onvif device configuration */
 void dumpConfigAll (struct OnvifData *onvif_data) {
-    xmlDocPtr reply;
+    xmlDocPtr reply __attribute__((unused));
 
     dump_reply = true;
 
